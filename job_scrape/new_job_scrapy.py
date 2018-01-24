@@ -203,23 +203,44 @@ def glassdoor_parse1(location):
     process.start()
 
 
-def run():
+
+
+def run_test2():
+    """Test, downloads Glassdoor page to disk
+    """
     #--- Spider
     class MySpiderSpider(scrapy.Spider):
         name = "Spider_DownloadPage"
         
         def parse(self, response):
             print("*******************")
+            logging.critical("Response: {}".format(response))
+            filename = "downloaded" + '.html'
+            logging.info("Writing to file {}".format( filename))
+            with open(filename, 'wb') as f:
+                f.write(response.body)
             print("*******************")
+                        
+    #--- Execute the spider
+    process = CrawlerProcess()
+    process.crawl(MySpiderSpider, start_urls=[r"http://quotes.toscrape.com/page/1/"] )
+    process.start()
+
+
+def run_test():
+    """Test, downloads the entire quotes page to disk
+    """
+    #--- Spider
+    class MySpiderSpider(scrapy.Spider):
+        name = "Spider_DownloadPage"
+        
+        def parse(self, response):
             print("*******************")
             logging.critical("Response: {}".format(response))
             filename = "downloaded" + '.html'
             logging.info("Writing to file {}".format( filename))
-            raise
             with open(filename, 'wb') as f:
                 f.write(response.body)
-            print("*******************")
-            print("*******************")
             print("*******************")
                         
     #--- Execute the spider
@@ -249,4 +270,4 @@ def run():
 
 if __name__ == "__main__":
     #logging.getLogger('scrapy').propagate = False
-    run()
+    run_test()
