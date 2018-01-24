@@ -1,5 +1,7 @@
 import scrapy
 
+print(scrapy)
+raise
 
 class QuotesSpider(scrapy.Spider):
     name = "quotes2"
