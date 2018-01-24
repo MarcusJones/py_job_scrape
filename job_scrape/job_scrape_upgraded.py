@@ -89,6 +89,11 @@ LOCATION_HEADERS = {
         'Connection': 'keep-alive'
     }
 
+PLACE_IDS = [
+    {'city' :   'berlin',           'id':262210 },
+    {'city' :   'stuttgart',        'id':2507190},
+     ]
+
 
 
 def get_place_id(place):
@@ -128,10 +133,13 @@ def get_next_button_link(parser):
     #print(next_link)
     
     #--- Here it is in a one-liner!
-    next_href = parser.xpath('//li[@class="next"]/a')[0]
-    the_link = next_href.attrib['href']
+    try:
+        next_href = parser.xpath('//li[@class="next"]/a')[0]
+        the_link = next_href.attrib['href']
+    except:
+        the_link = False
+    
     return the_link
-
 
 def get_parser_html(url,data):
     # Form data to get job results
@@ -154,27 +162,8 @@ def get_parser_html(url,data):
     
     return parser, next_link
 
-def get_listings(parser):
-    raise
-def parse_place(place_id,search_city_name):
-    data = {
-        'clickSource': 'searchBtn',
-        'sc.keyword': keyword,
-        'locT': 'C',
-        'locId': place_id,
-        'jobType': ''
-    }
-    
-    job_listings = []
-
-    first_job_listing_url = 'https://www.glassdoor.com/Job/jobs.htm'
-    
-    #--- Get the parser and next link
-    parser, next_link = get_parser_html(first_job_listing_url,data)
-    
-    raise   
-    
-    
+def get_listings(parser,search_city_name):
+        
     XPATH_ALL_JOB = '//li[@class="jl"]'
     XPATH_NAME = './/a/text()'
     XPATH_JOB_URL = './/a/@href'
@@ -185,7 +174,7 @@ def parse_place(place_id,search_city_name):
     listings = parser.xpath(XPATH_ALL_JOB)
     
     logging.debug("Parsing {} listings".format(len(listings)))
-    
+    job_listings = list()
     for i,job in enumerate(listings):
         
         raw_job_name = job.xpath(XPATH_NAME)
@@ -215,18 +204,46 @@ def parse_place(place_id,search_city_name):
             "location": job_location,
             "url": job_url
         }
+        
         job_listings.append(jobs)
 
     return job_listings
-# else:
-#     print("location id not available")
 
-PLACE_IDS = [
-    {'city' :   'berlin',           'id':262210 },
-    {'city' :   'stuttgart',        'id':2507190},
-     ]
-
-
+def parse_place(place_id,search_city_name):
+    data = {
+        'clickSource': 'searchBtn',
+        'sc.keyword': keyword,
+        'locT': 'C',
+        'locId': place_id,
+        'jobType': ''
+    }
+    
+    counter = 0
+    flg_next = True
+    job_listings = list()
+    job_listing_url = 'https://www.glassdoor.com/Job/jobs.htm'
+    while flg_next:
+        #--- Get the parser and next link
+        print()
+        print("**********")
+        logging.debug("Parsing loop {} on {}".format(counter,job_listing_url))
+        parser, next_link = get_parser_html(job_listing_url,data)
+        
+        #--- Process this page
+        listings = get_listings(parser,search_city_name)
+        
+        #--- Append
+        job_listings = job_listings + listings
+        
+        if not next_link:
+            flg_next = False
+            #break
+            
+        #--- Loop around for the next page
+        job_listing_url = next_link
+        counter = counter + 1
+    return job_listings
+    
 def parse_all_places(keyword):
     listings = list()
     for pl in PLACE_IDS:
