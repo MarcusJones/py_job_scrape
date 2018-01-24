@@ -1,3 +1,6 @@
+#  -*- coding: utf-8 -*-
+
+
 # Code modified from:
 #https://www.scrapehero.com/how-to-scrape-job-listings-from-glassdoor-using-python-and-lxml/
 
@@ -107,9 +110,53 @@ def get_place_id(place):
     
     return place_id
 
-def parse_place(place_id,search_city_name):
-    job_litsting_url = 'https://www.glassdoor.com/Job/jobs.htm'
+def write_raw_html(response):
+    raw_html_file = r"sourcefile.html"
+    with open(raw_html_file, 'wb') as file:
+        file.write(response.text.encode("utf-8"))
+
+
+
+def get_next_button_link(parser):
+    #--- Breaking down the tree
+    #XPATH_NEXT_BUTTON = '//li[@class="next"]'
+    #next_button = parser.xpath(XPATH_NEXT_BUTTON)[0]
+    #print(next_button)
+    #print(type(next_button))
+    
+    #next_link = next_button.getchildren()[0]
+    #print(next_link)
+    
+    #--- Here it is in a one-liner!
+    next_href = parser.xpath('//li[@class="next"]/a')[0]
+    the_link = next_href.attrib['href']
+    return the_link
+
+
+def get_parser_html(url,data):
     # Form data to get job results
+    
+    response = requests.post(url, headers=HEADERS, data=data)
+    logging.debug("Got response".format(response))
+    #--- Write the raw html file
+    #write_raw_html(response)
+    
+    #--- The parser initialized
+    parser = html.fromstring(response.text)
+
+    # Making absolute url 
+    base_url = "https://www.glassdoor.com"
+    parser.make_links_absolute(base_url)
+    
+    next_link = get_next_button_link(parser)
+    #print(next_link)
+    logging.debug("Returning parser {}, and next link {}".format(parser, next_link))
+    
+    return parser, next_link
+
+def get_listings(parser):
+    raise
+def parse_place(place_id,search_city_name):
     data = {
         'clickSource': 'searchBtn',
         'sc.keyword': keyword,
@@ -117,19 +164,16 @@ def parse_place(place_id,search_city_name):
         'locId': place_id,
         'jobType': ''
     }
-
+    
     job_listings = []
 
-    response = requests.post(job_litsting_url, headers=HEADERS, data=data)
-    # extracting data from
-    # https://www.glassdoor.com/Job/jobs.htm?suggestCount=0&suggestChosen=true&clickSource=searchBtn&typedKeyword=andr&sc.keyword=android+developer&locT=C&locId=1146821&jobType=
-    #print(response)
-    #raise
+    first_job_listing_url = 'https://www.glassdoor.com/Job/jobs.htm'
     
-    parser = html.fromstring(response.text)
-    # Making absolute url 
-    base_url = "https://www.glassdoor.com"
-    parser.make_links_absolute(base_url)
+    #--- Get the parser and next link
+    parser, next_link = get_parser_html(first_job_listing_url,data)
+    
+    raise   
+    
     
     XPATH_ALL_JOB = '//li[@class="jl"]'
     XPATH_NAME = './/a/text()'
@@ -139,7 +183,7 @@ def parse_place(place_id,search_city_name):
     XPATH_SALARY = './/span[@class="green small"]/text()'
     
     listings = parser.xpath(XPATH_ALL_JOB)
-
+    
     logging.debug("Parsing {} listings".format(len(listings)))
     
     for i,job in enumerate(listings):
