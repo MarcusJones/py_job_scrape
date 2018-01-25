@@ -10,8 +10,8 @@ import unittest
 import logging.config
 print(ABSOLUTE_LOGGING_PATH)
 logging.config.fileConfig(ABSOLUTE_LOGGING_PATH)
-myLogger = logging.getLogger()
-myLogger.setLevel("DEBUG")
+#myLogger = logging.getLogger()
+#myLogger.setLevel("DEBUG")
 
 #===============================================================================
 #--- SETUP Standard modules
@@ -25,6 +25,14 @@ myLogger.setLevel("DEBUG")
 import scrapy
 import json
 from scrapy.crawler import CrawlerProcess
+
+#print(scrapy.logformatter)
+
+from scrapy.utils.log import configure_logging
+configure_logging()
+
+#raise
+
 #===============================================================================
 #--- SETUP Custom modules
 #===============================================================================
@@ -169,24 +177,6 @@ class Spider_GlassDoor(scrapy.Spider):
 
 
 def glassdoor_parse1(location):
-    class Spider_GlassDoorDownloadPage(scrapy.Spider):
-        name = "Spider_GlassDoorDownloadPage"
-        #location_url = r"http://quotes.toscrape.com/page/1/"
-        location_url = r"https://www.glassdoor.co.in/findPopularLocationAjax.htm?"
-    
-        start_urls = [
-            location_url,
-        ]
-    
-        def parse(self, response):
-            
-            filename = response.url.split("/")[-1] + '.html'
-            filename = "downloaded" + '.html'
-            logging.info("Writing to file {}".format( filename))
-            with open(filename, 'wb') as f:
-                
-                f.write(response.body)
-                
     
     location_url = "https://www.glassdoor.co.in/findPopularLocationAjax.htm?"
     logging.debug("Download page: {}".format(location_url))
@@ -202,7 +192,28 @@ def glassdoor_parse1(location):
     logging.critical("Starting: {}".format(process))
     process.start()
 
+def run_test3():
+    """Test, downloads Glassdoor page to disk
+    """
+    #--- Spider
+    class Spider_GlassDoorDownloadPage(scrapy.Spider):
+        name = "Spider_GlassDoorDownloadPage"
+   
+        def parse(self, response):
+            
+            filename = response.url.split("/")[-1] + '.html'
+            filename = "downloaded" + '.html'
+            logging.info("Writing to file {}".format( filename))
+            with open(filename, 'wb') as f:
+                f.write(response.body)
+    # END SPIDER
+    
 
+    #--- Execute the spider
+    process = CrawlerProcess()
+    location_url = r"https://www.glassdoor.com/Job/jobs.htm"
+    process.crawl(Spider_GlassDoorDownloadPage, start_urls=[location_url] )
+    process.start()
 
 
 def run_test2():
@@ -238,7 +249,7 @@ def run_test():
             print("*******************")
             logging.critical("Response: {}".format(response))
             filename = "downloaded" + '.html'
-            logging.info("Writing to file {}".format( filename))
+            logging.info("Writing to file {}".format(filename))
             with open(filename, 'wb') as f:
                 f.write(response.body)
             print("*******************")
@@ -270,4 +281,5 @@ def run_test():
 
 if __name__ == "__main__":
     #logging.getLogger('scrapy').propagate = False
-    run_test()
+    #run_test()
+    run_test3()

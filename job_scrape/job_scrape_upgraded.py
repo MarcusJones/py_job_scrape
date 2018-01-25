@@ -34,6 +34,7 @@ myLogger.setLevel("DEBUG")
 #--- SETUP Standard modules
 #===============================================================================
 import requests
+print(requests.__version__)
 import re
 #import os
 #import sys
@@ -141,8 +142,44 @@ def get_next_button_link(parser):
     
     return the_link
 
+
+def pretty_print_POST(req):
+    """
+    At this point it is completely built and ready
+    to be fired; it is "prepared".
+
+    However pay attention at the formatting used in 
+    this function because it is programmed to be pretty 
+    printed and may differ from the actual request.
+    """
+    print('{}\n{}\n{}\n\n{}'.format(
+        '-----------START-----------',
+        req.method + ' ' + req.url,
+        '\n'.join('{}: {}'.format(k, v) for k, v in req.headers.items()),
+        req.body,
+    ))
+
+
+def prepared_print(prepped):
+    print("Prepped:", prepped)
+    print("Prepped is a ",type(prepped))
+    #print("headers: ",prepped.headers)
+    print("headers: ")
+    for k in prepped.headers:
+        print("\t {:>30} - {:<50}".format(k, prepped.headers[k]))
+
+    print("url: ",prepped.url)
+    print("method: ",prepped.method)
+    print("body: ",prepped.body)
+    print("path_url: ",prepped.path_url)
+
 def get_parser_html(url,data):
-    # Form data to get job results
+    # Here is the raw header, which can be analyzed
+    #req = requests.Request(url=url, headers=HEADERS, data=data)
+    #prepped = req.prepare()
+    #prepared_print(prepped)
+    #raise
+    
     
     response = requests.post(url, headers=HEADERS, data=data)
     logging.debug("Got response".format(response))
